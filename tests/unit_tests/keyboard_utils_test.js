@@ -32,6 +32,16 @@ context("KeyboardUtils", () => {
     assert.equal("f", keyChar);
   });
 
+  should("use event.code for process-style IME key events", () => {
+    const keyChar = KeyboardUtils.getKeyChar({
+      key: "Process",
+      code: "KeyF",
+      isComposing: false,
+      keyCode: 70,
+    });
+    assert.equal("f", keyChar);
+  });
+
   should("use event.code for non-Latin letters even without composition flags", () => {
     const keyChar = KeyboardUtils.getKeyChar({
       key: "ㄹ",

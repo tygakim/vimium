@@ -39,16 +39,14 @@ function getRule(url, rules) {
   }
   const matchingRules = rules.filter((r) =>
     r.pattern && (url.search(ExclusionRegexpCache.get(r.pattern)) >= 0)
-  );
-  // An absolute exclusion rule (one with no passKeys) takes priority.
+  ).map((r) => ({ ...r, blockedKeys: r.blockedKeys ?? "" }));
+  // An absolute exclusion rule (one with no passKeys or blockedKeys) takes priority.
   for (const rule of matchingRules) {
-    if (!rule.passKeys) return rule;
+    if (!rule.passKeys && !rule.blockedKeys) return rule;
   }
   // Strip whitespace from all matching passKeys strings, and join them together.
   const passKeys = matchingRules.map((r) => r.passKeys.split(/\s+/).join("")).join("");
-  const blockedKeys = matchingRules.map((r) => (r.blockedKeys ?? "").split(/\s+/).join("")).join(
-    "",
-  );
+  const blockedKeys = matchingRules.map((r) => r.blockedKeys.split(/\s+/).join("")).join("");
   // TODO(philc): Remove this commented out code.
   // passKeys = (rule.passKeys.split(/\s+/).join "" for rule in matchingRules).join ""
   if (matchingRules.length > 0) {
@@ -64,9 +62,9 @@ function getRule(url, rules) {
 export function isEnabledForUrl(url) {
   const rule = getRule(url);
   return {
-    isEnabledForUrl: !rule || (rule.passKeys.length > 0),
+    isEnabledForUrl: !rule || (rule.passKeys.length > 0) || (rule.blockedKeys.length > 0),
     passKeys: rule ? rule.passKeys : "",
-    blockedKeys: rule ? rule.blockedKeys ?? "" : "",
+    blockedKeys: rule ? rule.blockedKeys : "",
   };
 }
 

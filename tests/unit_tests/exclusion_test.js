@@ -6,8 +6,8 @@ import "../../background_scripts/commands.js";
 
 const isEnabledForUrl = (request) => exclusions.isEnabledForUrl(request.url);
 
-// These tests cover only the most basic aspects of excluded URLs and passKeys.
-context("Excluded URLs and pass keys", () => {
+// These tests cover only the most basic aspects of excluded URLs, passKeys, and blockedKeys.
+context("Excluded URLs and pass/block keys", () => {
   setup(async () => {
     await Settings.onLoaded();
     await Settings.set("exclusionRules", [
@@ -19,6 +19,7 @@ context("Excluded URLs and pass keys", () => {
       { pattern: "http*://www.example.com/*", passKeys: "a bb c bba a", blockedKeys: " ff " },
       { pattern: "http*://www.duplicate.com/*", passKeys: "ace", blockedKeys: "xz" },
       { pattern: "http*://www.duplicate.com/*", passKeys: "bdf", blockedKeys: "zy" },
+      { pattern: "http*://www.block-only.com/*", passKeys: "", blockedKeys: "jk" },
     ]);
   });
 
@@ -66,6 +67,13 @@ context("Excluded URLs and pass keys", () => {
     assert.isTrue(rule.isEnabledForUrl);
     assert.equal("abcdef", rule.passKeys);
     assert.equal("xyz", rule.blockedKeys);
+  });
+
+  should("remain enabled for blocked-keys-only rules", () => {
+    const rule = isEnabledForUrl({ url: "http://www.block-only.com/pages" });
+    assert.isTrue(rule.isEnabledForUrl);
+    assert.equal("", rule.passKeys);
+    assert.equal("jk", rule.blockedKeys);
   });
 
   should("be enabled when given malformed regular expressions", async () => {
